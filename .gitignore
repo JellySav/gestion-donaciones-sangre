@@ -1,0 +1,31 @@
+# Archivos compilados de Java
+*.class
+*.jar
+*.war
+
+# Carpetas de compilación
+bin/
+build/
+dist/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+
+# Eclipse
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+.classpath
+.project
+.settings/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
