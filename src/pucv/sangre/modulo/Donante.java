@@ -1,4 +1,4 @@
-package pucv.sangre.modelo;
+package pucv.sangre.modulo;
 
 /**
  * Representa a un donante registrado en el sistema.

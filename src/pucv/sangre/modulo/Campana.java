@@ -1,12 +1,13 @@
-package pucv.sangre.modelo;
+package pucv.sangre.modulo;
 
-// importar Java Collections Framework (JCF) (SIA-4) 
+// Importar utilidades de Java Collections Framework (JCF) (SIA-4) 
 import java.util.HashMap;     
 import java.util.Map;        
 
 /**
- * Representa una campaña de donación que contiene una colección de Donantes -> Una Colección Anidada.
- */
+* Representa una campaña de donación que contiene una colección de Donantes -> Una Colección Anidada.
+*/
+
 public class Campana {
     private String codigo;
     private String nombre;
