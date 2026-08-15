@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  * Representa una campaña de donación que contiene una colección de Donantes -> Una Colección Anidada.
- */
+*/
 
 public class Campana {
     private String codigo;
