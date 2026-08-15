@@ -28,6 +28,13 @@ public class Campana {
         }
     }
 
+
+    // Sobrecarga - Recibe los atributos primitivos directamente (SIA-5)
+    public void agregarDonante(String rut, String nombre, String grupoSanguineo, String factorRh, int edad) {
+        Donante nuevo = new Donante(rut, nombre, grupoSanguineo, factorRh, edad);
+        this.donantes.put(rut, nuevo);
+    }
+
     public Donante buscarDonante(String rut) {
         return this.donantes.get(rut);
     }
