@@ -5,14 +5,14 @@ import java.util.HashMap;
 import java.util.Map;        
 
 /**
-* Representa una campaña de donación que contiene una colección de Donantes -> Una Colección Anidada.
-*/
+ * Representa una campaña de donación que contiene una colección de Donantes -> Una Colección Anidada.
+ */
 
 public class Campana {
     private String codigo;
     private String nombre;
     private String lugar;
-    private Map<String, Donante> donantes;  // Colección anidada (Mapa de Donantes dentro de la Campaña)
+    private Map<String, Donante> donantes; // Colección anidada (Mapa de Donantes)
 
     public Campana(String codigo, String nombre, String lugar) {
         this.codigo = codigo;
@@ -23,7 +23,9 @@ public class Campana {
 
     // Métodos de gestión para la colección anidada
     public void agregarDonante(Donante donante) {
-        this.donantes.put(donante.getRut(), donante);
+        if (donante != null) {
+            this.donantes.put(donante.getRut(), donante);
+        }
     }
 
     public Donante buscarDonante(String rut) {
@@ -65,5 +67,11 @@ public class Campana {
 
     public void setDonantes(Map<String, Donante> donantes) {
         this.donantes = donantes;
+    }
+
+    // Sobreescritura -> Para mostrar la campaña formateada en consola
+    @Override
+    public String toString() {
+        return "[" + codigo + "] " + nombre + " - Lugar: " + lugar + " (" + donantes.size() + " donantes registrados)";
     }
 }
