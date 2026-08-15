@@ -4,6 +4,10 @@ package pucv.sangre.gestion;
 import pucv.sangre.modulo.Campana;
 import pucv.sangre.modulo.Donante;
 
+// Importar excepciones personalizadas (SIA-12)
+import pucv.sangre.excepciones.CampanaNoEncontradaException;
+import pucv.sangre.excepciones.DonanteInvalidoException;
+
 // Importar utilidades de Java Collections Framework (JCF) (SIA-4) 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +18,6 @@ import java.util.Map;
  * Clase principal de gestión del sistema (Servicio).
  * Contiene la primera colección del JCF (Map de Campañas).
  */
-
 public class GestionCentroSangre {
     
     // Primera colección (Mapa principal de Campañas) (SIA-4)
@@ -28,8 +31,7 @@ public class GestionCentroSangre {
     /**
      * Permite inicializar el sistema con información ficticia
      * para probar los menús inmediatamente al ejecutar. (SIA-3)
-    */
-
+     */
     private void cargarDatosIniciales() {
         Campana c1 = new Campana("C01", "Campaña Universitaria Valparaíso", "Plaza Bisquertt");
         Campana c2 = new Campana("C02", "Salva Vidas Verano", "Hospital Fricke");
@@ -40,7 +42,6 @@ public class GestionCentroSangre {
         c1.agregarDonante(new Donante("19283746-5", "Ana Torres", "O", "+", 24));
         c1.agregarDonante(new Donante("20111222-3", "Carlos Gómez", "A", "-", 30));
         c2.agregarDonante(new Donante("18444555-K", "Beatriz Soto", "O", "-", 28));
-        c3.agregarDonante(new Donante("21567253-8", "Ricardo Beltran", "B", "-", 21));
         c3.agregarDonante(new Donante("21567253-8", "Ricardo Beltran", "B", "-", 21));
         c4.agregarDonante(new Donante("18264732-5", "Alejandra Lopez", "A", "+", 25));
         c4.agregarDonante(new Donante("21836247-4", "Veronica Huerta", "O", "-", 24));
@@ -53,62 +54,66 @@ public class GestionCentroSangre {
     }
 
     /**
-     * Metodos Crud para campañas, La colecion 1 (SIA-7 y SIA-8)
-    */
-
-    public boolean agregarCampana(Campana campana) {
-        if (campana != null && !campanas.containsKey(campana.getCodigo())) {
-            campanas.put(campana.getCodigo(), campana);
-            return true;
+     * Métodos CRUD para campañas - Colección 1 con Excepciones (SIA-7, SIA-8, SIA-12)
+     */
+    public boolean agregarCampana(Campana campana) throws DonanteInvalidoException {
+        if (campana == null || campana.getCodigo() == null || campana.getCodigo().trim().isEmpty()) {
+            throw new DonanteInvalidoException("La campaña ingresada no tiene un código válido.");
         }
-        return false;
+        if (campanas.containsKey(campana.getCodigo())) {
+            throw new DonanteInvalidoException("Ya existe una campaña registrada con el código: " + campana.getCodigo());
+        }
+        campanas.put(campana.getCodigo(), campana);
+        return true;
     }
 
-    public Campana buscarCampana(String codigo) {
-        return campanas.get(codigo);
-    }
-
-    public boolean eliminarCampana(String codigo) {
-        return campanas.remove(codigo) != null;
-    }
-
-    public boolean modificarCampana(String codigo, String nuevoNombre, String nuevoLugar) {
+    public Campana buscarCampana(String codigo) throws CampanaNoEncontradaException {
         Campana c = campanas.get(codigo);
-        if (c != null) {
-            c.setNombre(nuevoNombre);
-            c.setLugar(nuevoLugar);
-            return true;
+        if (c == null) {
+            throw new CampanaNoEncontradaException("No se encontró la campaña con el código: " + codigo);
         }
-        return false;
+        return c;
+    }
+
+    public boolean eliminarCampana(String codigo) throws CampanaNoEncontradaException {
+        buscarCampana(codigo); // Reutiliza la búsqueda para lanzar la excepción si no existe
+        campanas.remove(codigo);
+        return true;
+    }
+
+    public boolean modificarCampana(String codigo, String nuevoNombre, String nuevoLugar) throws CampanaNoEncontradaException {
+        Campana c = buscarCampana(codigo); // Reutiliza la búsqueda para lanzar la excepción si no existe
+        c.setNombre(nuevoNombre);
+        c.setLugar(nuevoLugar);
+        return true;
     }
 
     /**
-     * Metodo de Sobecargo - Versión 1 : Búsqueda global de un donante por su RUT (1 parámetro). (SIA-5)
+     * Métodos Sobrecargados con Excepciones (SIA-5, SIA-12)
      */
-    public Donante buscarDonante(String rut) {
+
+    // Versión 1 : Búsqueda global de un donante por RUT (1 parámetro)
+    public Donante buscarDonante(String rut) throws DonanteInvalidoException {
         for (Campana c : campanas.values()) {
             Donante d = c.buscarDonante(rut);
             if (d != null) {
                 return d;
             }
         }
-        return null;
+        throw new DonanteInvalidoException("No se encontró ningún donante registrado con el RUT: " + rut);
     }
 
-    /**
-     * Metodo Sobrecargo - Versión 2 : Búsqueda de un donante en una campaña específica por código y RUT (2 parámetros). (SIA-5)
-     */
-    public Donante buscarDonante(String codCampana, String rut) {
-        Campana campana = campanas.get(codCampana);
-        if (campana != null) {
-            return campana.buscarDonante(rut);
+    // Versión 2 : Búsqueda de un donante en una campaña específica (2 parámetros)
+    public Donante buscarDonante(String codCampana, String rut) throws CampanaNoEncontradaException, DonanteInvalidoException {
+        Campana campana = buscarCampana(codCampana); // Lanza CampanaNoEncontradaException si no existe
+        Donante d = campana.buscarDonante(rut);
+        if (d == null) {
+            throw new DonanteInvalidoException("El donante con RUT " + rut + " no existe en la campaña " + codCampana);
         }
-        return null;
+        return d;
     }
 
-    /**
-     * Metodo Sobrecago - Versión 3 : Búsqueda de donantes por grupo, RH y edad mínima (3 parámetros). (SIA-5)
-     */
+    // Versión 3 : Búsqueda de donantes por grupo, RH y edad mínima (3 parámetros)
     public List<Donante> buscarDonante(String grupoSanguineo, String factorRh, int edadMinima) {
         List<Donante> resultado = new ArrayList<>();
         for (Campana c : campanas.values()) {
@@ -123,9 +128,8 @@ public class GestionCentroSangre {
         return resultado;
     }
 
-
     /**
-     * Funcionalidad Propia: Filtra y retorna los donantes compatibles según el tipo de un paciente en emergencia. (SIA-9)
+     * Funcionalidad Propia: Filtra y retorna los donantes compatibles según el tipo de un paciente (SIA-9)
      */
     public List<Donante> obtenerDonantesCompatibles(String grupoReceptor, String rhReceptor) {
         List<Donante> compatibles = new ArrayList<>();
@@ -150,10 +154,7 @@ public class GestionCentroSangre {
         return false;
     }
 
-    /**
-     *  Getters y Setters (SIA-3)
-    */
-
+    // Getters y Setters (SIA-3)
     public Map<String, Campana> getCampanas() {
         return campanas;
     }
