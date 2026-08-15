@@ -22,14 +22,15 @@ public class Campana {
     }
 
     // Métodos de gestión para la colección anidada
+    
+    // Versión 1: Recibe el objeto instanciado
     public void agregarDonante(Donante donante) {
         if (donante != null) {
             this.donantes.put(donante.getRut(), donante);
         }
     }
 
-
-    // Sobrecarga - Recibe los atributos primitivos directamente (SIA-5)
+    // Versión 2 : Recibe atributos primitivos (SIA-5) Sobrecarga
     public void agregarDonante(String rut, String nombre, String grupoSanguineo, String factorRh, int edad) {
         Donante nuevo = new Donante(rut, nombre, grupoSanguineo, factorRh, edad);
         this.donantes.put(rut, nuevo);

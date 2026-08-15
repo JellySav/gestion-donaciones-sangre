@@ -1,9 +1,13 @@
 package pucv.sangre.modulo;
 
+/**
+ * Subclase que hereda de Campana (SIA-6)
+ */
+
 public class CampanaUrgente extends Campana {
     private String nivelUrgencia; // Seria en formato "ALTA", "CRITICA"
 
-    
+
     public CampanaUrgente(String codigo, String nombre, String lugar, String nivelUrgencia) {
         super(codigo, nombre, lugar);
         this.nivelUrgencia = nivelUrgencia;
@@ -17,5 +21,9 @@ public class CampanaUrgente extends Campana {
 
     public String getNivelUrgencia() {
         return nivelUrgencia;
+    }
+
+    public void setNivelUrgencia(String nivelUrgencia) {
+        this.nivelUrgencia = nivelUrgencia;
     }
 }
