@@ -1,6 +1,6 @@
 package pucv.sangre.gestion;
 
-// Importar clases del paquete "modulo"
+// Importar clases de "modulo"
 import pucv.sangre.modulo.Campana;
 import pucv.sangre.modulo.Donante;
 
@@ -18,6 +18,7 @@ import java.util.Map;
  * Clase principal de gestión del sistema (Servicio).
  * Contiene la primera colección del JCF (Map de Campañas).
  */
+
 public class GestionCentroSangre {
     
     // Primera colección (Mapa principal de Campañas) (SIA-4)
@@ -54,7 +55,7 @@ public class GestionCentroSangre {
     }
 
     /**
-     * Métodos CRUD para campañas - Colección 1 con Excepciones (SIA-7, SIA-8, SIA-12)
+     * Métodos CRUD para campañas - Colección 1 con Excepciones (SIA-7), (SIA-8) y (SIA-12)
      */
     public boolean agregarCampana(Campana campana) throws DonanteInvalidoException {
         if (campana == null || campana.getCodigo() == null || campana.getCodigo().trim().isEmpty()) {
@@ -76,20 +77,20 @@ public class GestionCentroSangre {
     }
 
     public boolean eliminarCampana(String codigo) throws CampanaNoEncontradaException {
-        buscarCampana(codigo); // Reutiliza la búsqueda para lanzar la excepción si no existe
+        buscarCampana(codigo); // Valida existencia
         campanas.remove(codigo);
         return true;
     }
 
     public boolean modificarCampana(String codigo, String nuevoNombre, String nuevoLugar) throws CampanaNoEncontradaException {
-        Campana c = buscarCampana(codigo); // Reutiliza la búsqueda para lanzar la excepción si no existe
+        Campana c = buscarCampana(codigo); // Valida existencia
         c.setNombre(nuevoNombre);
         c.setLugar(nuevoLugar);
         return true;
     }
 
     /**
-     * Métodos Sobrecargados con Excepciones (SIA-5, SIA-12)
+     * Métodos Sobrecargados con Excepciones (SIA-5) y (SIA-12)
      */
 
     // Versión 1 : Búsqueda global de un donante por RUT (1 parámetro)
@@ -100,12 +101,12 @@ public class GestionCentroSangre {
                 return d;
             }
         }
-        throw new DonanteInvalidoException("No se encontró ningún donante registrado con el RUT: " + rut);
+        throw new DonanteInvalidoException("No se encontro ningún donante registrado con el RUT: " + rut);
     }
 
     // Versión 2 : Búsqueda de un donante en una campaña específica (2 parámetros)
     public Donante buscarDonante(String codCampana, String rut) throws CampanaNoEncontradaException, DonanteInvalidoException {
-        Campana campana = buscarCampana(codCampana); // Lanza CampanaNoEncontradaException si no existe
+        Campana campana = buscarCampana(codCampana);
         Donante d = campana.buscarDonante(rut);
         if (d == null) {
             throw new DonanteInvalidoException("El donante con RUT " + rut + " no existe en la campaña " + codCampana);
