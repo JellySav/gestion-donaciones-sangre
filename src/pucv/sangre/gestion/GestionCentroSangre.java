@@ -23,14 +23,17 @@ import java.util.Map;
 public class GestionCentroSangre {
     
     //Colecciones de datos principales (SIA-4)
-    private Map<String, Campana> campanas;
-    private final Map<String, ReservaSanguinea> reservas;
+    // Colecciones de datos principales (SIA-4)
+    private Map<String, Campana> campanas; // Clave: código de la campaña
+    private final Map<String, List<Campana>> campanasPorFecha; // Clave: Fecha (String "YYYY-MM-DD")
+    private final Map<String, ReservaSanguinea> reservas; // Clave: Tipo Sanguíneo ("A+", "O-", etc.)
 
     public GestionCentroSangre() {
         this.campanas = new HashMap<>();
+        this.campanasPorFecha = new HashMap<>();
         this.reservas = new HashMap<>();
         inicializarReservas();
-        cargarDatosIniciales(); 
+        cargarDatosIniciales();
     }
 
     //Carga inicial y configuración del entorno de pruebas (SIA-3)    
@@ -57,12 +60,16 @@ public class GestionCentroSangre {
         c4.agregarDonante(new Donante("18264732-5", "Alejandra Lopez", "A", "+", 25, "+56999990000", hoy.minusMonths(6)));
         c4.agregarDonante(new Donante("21836247-4", "Veronica Huerta", "O", "-", 24, "+56912345678", null));
 
-        campanas.put(c1.getCodigo(), c1);
-        campanas.put(c2.getCodigo(), c2);
-        campanas.put(c3.getCodigo(), c3);
-        campanas.put(c4.getCodigo(), c4);
+        try {
+            agregarCampana(c1);
+            agregarCampana(c2);
+            agregarCampana(c3);
+            agregarCampana(c4);
+        } catch (DonanteInvalidoException e) {
+            System.err.println("Error al cargar datos iniciales: " + e.getMessage());
+        }
 
-        // Stock inicial de prueba
+        // Stock inicial
         registrarIngresoSangre("O-", 15);
         registrarIngresoSangre("A+", 5);
     }
@@ -76,9 +83,19 @@ public class GestionCentroSangre {
         if (campanas.containsKey(campana.getCodigo())) {
             throw new DonanteInvalidoException("Ya existe una campaña registrada con el código: " + campana.getCodigo());
         }
+        // Registro en el mapa principal
         campanas.put(campana.getCodigo(), campana);
+
+        // Registro en la estructura por fecha
+        String fechaClave = campana.getFechaInicio() != null ? campana.getFechaInicio().toString() : campana.getFecha();
+        if (fechaClave != null && !fechaClave.isBlank()) {
+            campanasPorFecha
+                    .computeIfAbsent(fechaClave, k -> new ArrayList<>())
+                    .add(campana);
+        }
         return true;
     }
+
 
     public Campana buscarCampana(String codigo) throws CampanaNoEncontradaException {
         Campana c = campanas.get(codigo);
@@ -87,12 +104,40 @@ public class GestionCentroSangre {
         }
         return c;
     }
+    
+    public List<Campana> buscarCampanasPorFecha(String fecha) throws CampanaNoEncontradaException {
+        List<Campana> lista = campanasPorFecha.get(fecha);
+        if (lista == null || lista.isEmpty()) {
+            throw new CampanaNoEncontradaException("No hay campañas registradas para la fecha: " + fecha);
+        }
+        return lista;
+    }
+
+    public Campana buscarCampana(String fecha, String codigo) throws CampanaNoEncontradaException {
+        List<Campana> lista = buscarCampanasPorFecha(fecha);
+        for (Campana c : lista) {
+            if (c.getCodigo().equalsIgnoreCase(codigo)) {
+                return c;
+            }
+        }
+        throw new CampanaNoEncontradaException("No se encontró la campaña con código '" + codigo + "' en la fecha " + fecha);
+    }
 
     public boolean eliminarCampana(String codigo) throws CampanaNoEncontradaException {
-        buscarCampana(codigo);
+        Campana c = buscarCampana(codigo);
         campanas.remove(codigo);
+
+        String fechaClave = c.getFechaInicio() != null ? c.getFechaInicio().toString() : c.getFecha();
+        if (fechaClave != null && campanasPorFecha.containsKey(fechaClave)) {
+            List<Campana> lista = campanasPorFecha.get(fechaClave);
+            lista.removeIf(item -> item.getCodigo().equalsIgnoreCase(codigo));
+            if (lista.isEmpty()) {
+                campanasPorFecha.remove(fechaClave);
+            }
+        }
         return true;
     }
+
 
     public boolean modificarCampana(String codigo, String nuevoNombre, String nuevoLugar) throws CampanaNoEncontradaException {
         Campana c = buscarCampana(codigo);
@@ -107,6 +152,10 @@ public class GestionCentroSangre {
 
     public void setCampanas(Map<String, Campana> campanas) {
         this.campanas = campanas;
+    }
+
+    public Map<String, List<Campana>> getCampanasPorFecha() {
+        return campanasPorFecha;
     }
 
     /**
@@ -179,7 +228,7 @@ public class GestionCentroSangre {
         List<Donante> compatibles = new ArrayList<>();
         for (Campana c : campanas.values()) {
             for (Donante d : c.getDonantes().values()) {
-                if (esCompatible(d.getGrupo(), d.getRh(), grupoReceptor, rhReceptor)) {
+                if (esCompatible(d.getGrupoSanguineo(), d.getFactorRh(), grupoReceptor, rhReceptor)) {
                     compatibles.add(d);
                 }
             }
@@ -195,7 +244,7 @@ public class GestionCentroSangre {
             if (!c.esActiva()) continue;
 
             for (Donante d : c.getDonantes().values()) {
-                if (esCompatible(d.getGrupo(), d.getRh(), grupoReceptor, rhReceptor) && esAptoParaDonar(d)) {
+                if (esCompatible(d.getGrupoSanguineo(), d.getFactorRh(), grupoReceptor, rhReceptor) && esAptoParaDonar(d)) {
                     elegibles.add(d);
                 }
             }
@@ -210,13 +259,19 @@ public class GestionCentroSangre {
         return !LocalDate.now().isBefore(fechaDisponible);
     }
 
-    // Lógica universal de compatibilidad sanguínea
     public boolean esCompatible(String gDonante, String rhDonante, String gReceptor, String rhReceptor) {
-        // Donante Universal (O-)
-        if (gDonante.equalsIgnoreCase("O") && rhDonante.equals("-")) return true;
-        // Receptor Universal (AB+)
-        if (gReceptor.equalsIgnoreCase("AB") && rhReceptor.equals("+")) return true;
-        // Coincidencia Exacta
-        return gDonante.equalsIgnoreCase(gReceptor) && rhDonante.equals(rhReceptor);
+        // Validación del factor Rh: Un donante Rh(-) sirve a Rh(+) o Rh(-); Rh(+) solo a Rh(+)
+        boolean rhCompatible = rhDonante.equals("-") || rhReceptor.equals("+");
+        if (!rhCompatible) return false;
+
+        // Reglas ABO -> Donante Universal (O-) y Receptor Universal (AB+)
+        return switch (gReceptor.toUpperCase()) {
+            case "O"  -> gDonante.equalsIgnoreCase("O");
+            case "A"  -> gDonante.equalsIgnoreCase("O") || gDonante.equalsIgnoreCase("A");
+            case "B"  -> gDonante.equalsIgnoreCase("O") || gDonante.equalsIgnoreCase("B");
+            case "AB" -> true;
+            default   -> false;
+        };
     }
+
 }

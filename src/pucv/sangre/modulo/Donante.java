@@ -9,22 +9,27 @@ import java.time.LocalDate;
  * Estos dos ultimos se mostraran de forma conjunta.
  */
 public class Donante {
-    private String rut;   // Se pasaria a String, no importaria el formato.
+    private String rut;
     private String nombre;
     private String grupoSanguineo;  // "A", "B", "AB", "O"
-    private String factorRh;    // "+", "-" -> Factor a identificar  
+    private String factorRh;        // "+", "-"
     private int edad;
-    private String telefono;  // Utilizar para reseva sanguinea
-    private LocalDate ultimaFechaDonacion; // Se usa java.time.LocalDate para evaluar elegibilidad
+    private String telefono;
+    private LocalDate ultimaFechaDonacion;
 
-    public Donante(String rut, String nombre, String grupo, String rh, int edad, String telefono, LocalDate ultimaFechaDonacion) {
+    public Donante(String rut, String nombre, String grupoSanguineo, String factorRh, int edad, String telefono, LocalDate ultimaFechaDonacion) {
         this.rut = rut;
         this.nombre = nombre;
-        this.grupo = grupo;
-        this.rh = rh;
+        this.grupoSanguineo = grupoSanguineo;
+        this.factorRh = factorRh;
         this.edad = edad;
         this.telefono = telefono;
         this.ultimaFechaDonacion = ultimaFechaDonacion;
+    }
+
+    // Sobrecarga de constructor para registros rápidos sin historial de donación previo
+    public Donante(String rut, String nombre, String grupoSanguineo, String factorRh, int edad, String telefono) {
+        this(rut, nombre, grupoSanguineo, factorRh, edad, telefono, null);
     }
 
     // Getters y Setters (SIA-3) 
@@ -88,6 +93,9 @@ public class Donante {
     // Sobreescritura -> Convertir todo a String (SIA-5) 
     @Override
     public String toString() {
-        return String.format("%s | %s | %s%s | %d años | Tel: %s | Últ. Donación: %s", rut, nombre, grupo, rh, edad, telefono, (ultimaFechaDonacion != null ? ultimaFechaDonacion : "Sin registros"));
+        return String.format("%s | %s | %s%s | %d años | Tel: %s | Últ. Donación: %s", 
+                rut, nombre, grupoSanguineo, factorRh, edad, 
+                (telefono != null ? telefono : "Sin tel"), 
+                (ultimaFechaDonacion != null ? ultimaFechaDonacion : "Sin registros"));
     }
 }

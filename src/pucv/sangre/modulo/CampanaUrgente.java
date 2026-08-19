@@ -8,8 +8,14 @@ public class CampanaUrgente extends Campana {
     private String nivelUrgencia; // Seria en formato "ALTA", "CRITICA"
 
 
-    public CampanaUrgente(String codigo, String nombre, String lugar, String nivelUrgencia) {
-        super(codigo, nombre, lugar);
+    public CampanaUrgente(String codigo, String nombre, String lugar, LocalDate fechaInicio, LocalDate fechaFin, String nivelUrgencia) {
+        super(codigo, nombre, lugar, fechaInicio, fechaFin);
+        this.nivelUrgencia = nivelUrgencia;
+    }
+
+    // Sobrecaega del constructor por fechas en formato String 
+    public CampanaUrgente(String codigo, String nombre, String lugar, String fechaInicio, String fechaFin, String nivelUrgencia) {
+        super(codigo, nombre, lugar, fechaInicio, fechaFin);
         this.nivelUrgencia = nivelUrgencia;
     }
 
@@ -19,6 +25,7 @@ public class CampanaUrgente extends Campana {
         return super.getNombre() + " [URGENCIA: " + nivelUrgencia + "]";
     }
 
+    // Getters y Setters (SIA-3)
     public String getNivelUrgencia() {
         return nivelUrgencia;
     }
